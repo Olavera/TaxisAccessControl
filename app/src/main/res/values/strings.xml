@@ -4,7 +4,8 @@
     <string name="app_name">Taxis Access Control</string>
     <string name="navigation.drawer.open">Black List</string>
     <string name="navigation.drawer.close">Black List</string>
-    <string name="section.blacklist">Black List</string>
+    <string name="str.section.blacklist">Black List</string>
+    <string name="str.section.vehicledetails">Black List</string>
     <string name="str.loading">Loading...</string>
     <string name="str.login">Login</string>
     <string name="prompt.username">User name</string>

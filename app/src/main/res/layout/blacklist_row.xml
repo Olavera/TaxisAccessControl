@@ -3,34 +3,34 @@
     android:layout_width="match_parent" android:layout_height="wrap_content">
 
     <TextView
-        android:id="@+id/plateNumber_tv"
+        android:id="@+id/idListaNegra_tv"
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:padding="5dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
     <TextView
-        android:id="@+id/make_tv"
+        android:id="@+id/matricula_tv"
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:padding="5dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_toRightOf="@+id/plateNumber_tv" />
+        android:layout_toRightOf="@+id/idListaNegra_tv" />
 
     <TextView
-        android:id="@+id/model_tv"
+        android:id="@+id/estado_tv"
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:padding="5dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_toRightOf="@+id/make_tv" />
+        android:layout_toRightOf="@+id/matricula_tv" />
 
     <TextView
-        android:id="@+id/color_tv"
+        android:id="@+id/fechaInclusion_tv"
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:padding="5dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_toRightOf="@+id/model_tv" />
+        android:layout_toRightOf="@+id/estado_tv" />
 
 </RelativeLayout>

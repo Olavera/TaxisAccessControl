@@ -1,84 +1,81 @@
 package com.iecisa.taxisaccesscontrol.mvp.presenters;
 
-import com.iecisa.common.BusProvider;
-import com.iecisa.domain.GetBlacklistUsecase;
-import com.iecisa.domain.GetVehicleDetailsUsecase;
-import com.iecisa.model.entities.BlacklistWrapper;
-import com.iecisa.model.entities.ErrorResponse;
-import com.iecisa.model.entities.VehicleDetailsWrapper;
-import com.iecisa.model.rest.RestDataSource;
-import com.iecisa.taxisaccesscontrol.mvp.views.BlacklistView;
-import com.squareup.otto.Subscribe;
+import android.os.Bundle;
+import android.view.View;
 
-import java.util.ArrayList;
+import com.iecisa.taxisaccesscontrol.model.entities.Wrapper;
+import com.iecisa.taxisaccesscontrol.mvp.views.MVPView;
+import com.iecisa.taxisaccesscontrol.domain.GetBlacklistUsecase;
+import com.iecisa.taxisaccesscontrol.model.Repository;
+import com.iecisa.taxisaccesscontrol.model.entities.Vehicle;
+import com.iecisa.taxisaccesscontrol.mvp.views.BlacklistView;
+
+import java.util.List;
+
+import rx.Subscription;
 
 /**
  * @author darevalo
  */
 public class BlacklistPresenter implements Presenter {
 
-    private final BlacklistView mBlacklistView;
-    private GetBlacklistUsecase mGetBlacklistUsecase;
-    private GetVehicleDetailsUsecase mGetVehicleDetailsUsecase;
-    private RestDataSource mRestDataSource;
+    private BlacklistView mBlacklistView;
+    private final GetBlacklistUsecase mGetBlacklistUsecase;
+    private Subscription mBlacklistSubscription;
 
-    public BlacklistPresenter(BlacklistView blacklistView, RestDataSource restDataSource) {
-        this.mBlacklistView = blacklistView;
-        this.mRestDataSource = restDataSource;
+    public BlacklistPresenter(Repository repository) {
+        this.mGetBlacklistUsecase = new GetBlacklistUsecase(repository);
     }
 
     @Override
-    public void start() {
-        BusProvider.getUIBusInstance().register(this);
-        mGetBlacklistUsecase = new GetBlacklistUsecase(mRestDataSource);
-        mGetVehicleDetailsUsecase = new GetVehicleDetailsUsecase(mRestDataSource);
-        refreshBlacklist();
+    public void onStart() {
+
     }
 
     @Override
-    public void stop() {
-        BusProvider.getUIBusInstance().unregister(this);
-        if(mGetBlacklistUsecase!=null){
-            mGetBlacklistUsecase.unregisterBus();
-        }
-        if(mGetVehicleDetailsUsecase!=null){
-            mGetVehicleDetailsUsecase.unregisterBus();
-        }
+    public void onStop() {
+        if (mBlacklistSubscription!=null && !mBlacklistSubscription.isUnsubscribed())
+            mBlacklistSubscription.unsubscribe();
     }
 
-    public void refreshBlacklist() {
+    @Override
+    public void attachView(MVPView view) {
+        mBlacklistView = (BlacklistView) view;
+    }
+
+    @Override
+    public void attachBundle(Bundle bundle) {
+
+    }
+
+    @Override
+     public void initializePresenter() {
         mBlacklistView.showLoading();
-        mGetBlacklistUsecase.execute();
+        mBlacklistSubscription = mGetBlacklistUsecase.execute().subscribe(
+                // On Next
+                (response) ->  { onNext(response); },
+                // On Error
+                (throwable) -> { onError(throwable); },
+                // On Complete
+                () -> { onComplete(); }
+        );
     }
 
-    @Subscribe
-    public void onBlacklistReceived(BlacklistWrapper response) {
-        mBlacklistView.hideLoading();
-        if(response.isSuccessful()) {
-            mBlacklistView.showNewList((ArrayList) response.getResults());
+    private void onNext(Wrapper<List<Vehicle>> response) {
+        if(response.isSuccessfully()){
+            mBlacklistView.showNewList(response.getResult());
         }else{
             mBlacklistView.showError();
         }
     }
 
-    public void getVehicleDetails(String numberPlate){
-        mBlacklistView.showLoading();
-        mGetVehicleDetailsUsecase.getVehicleDetails(numberPlate);
-    }
-
-    @Subscribe
-    public void onVehicleDetailsReceived(VehicleDetailsWrapper response) {
-        mBlacklistView.hideLoading();
-        if(response.isSuccessful()) {
-            mBlacklistView.showVehicleDetails(response.getVehicleDetails());
-        }else{
-            mBlacklistView.showError();
-        }
-    }
-
-    @Subscribe
-    public void onError(ErrorResponse response) {
+    private void onError(Throwable e) {
         mBlacklistView.hideLoading();
         mBlacklistView.showConexionError();
     }
+
+    private void onComplete() {
+        mBlacklistView.hideLoading();
+    }
+
 }

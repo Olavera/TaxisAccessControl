@@ -1,60 +1,86 @@
 package com.iecisa.taxisaccesscontrol.mvp.presenters;
 
-import com.iecisa.common.BusProvider;
-import com.iecisa.domain.LoginUsecase;
-import com.iecisa.model.MediaDataSource;
-import com.iecisa.model.entities.ErrorResponse;
-import com.iecisa.model.entities.LoginResponse;
-import com.iecisa.model.rest.RestDataSource;
+import android.os.Bundle;
+
+import com.iecisa.taxisaccesscontrol.domain.LoginUsecase;
+import com.iecisa.taxisaccesscontrol.model.Repository;
+import com.iecisa.taxisaccesscontrol.model.entities.Wrapper;
+import com.iecisa.taxisaccesscontrol.model.rest.RestRespository;
 import com.iecisa.taxisaccesscontrol.mvp.views.LoginView;
-import com.squareup.otto.Subscribe;
+import com.iecisa.taxisaccesscontrol.mvp.views.MVPView;
+
+
+import rx.Subscription;
 
 /**
  * @author darevalo
  */
 public class LoginPresenter implements Presenter {
 
-    private final LoginView mLoginView;
+    private LoginView mLoginView;
+    private Repository mRepository;
     private LoginUsecase mLoginUsecase;
-    private RestDataSource mRestDataSource;
+    private Subscription mLoginSubscription;
 
-    public LoginPresenter(LoginView loginView) {
-        this.mLoginView = loginView;
+    public LoginPresenter() {
+
     }
 
     @Override
-    public void start() {
-        BusProvider.getUIBusInstance().register(this);
+    public void onStart() {
+
     }
 
     @Override
-    public void stop() {
-        BusProvider.getUIBusInstance().unregister(this);
-        if(mLoginUsecase!=null){
-            mLoginUsecase.unregisterBus();
-        }
+    public void onStop() {
+        if (mLoginSubscription!=null && !mLoginSubscription.isUnsubscribed())
+            mLoginSubscription.unsubscribe();
+    }
+
+    @Override
+    public void attachView(MVPView view) {
+        mLoginView = (LoginView) view;
+    }
+
+    @Override
+    public void attachBundle(Bundle bundle) {
+
+    }
+
+    @Override
+    public void initializePresenter() {
     }
 
     public void attemptLogin(String userName, String password) {
-        mRestDataSource = new RestDataSource(userName, password);
-        this.mLoginUsecase = new LoginUsecase(mRestDataSource);
+        mRepository = new RestRespository(userName, password);
+        mLoginUsecase = new LoginUsecase(mRepository);
         mLoginView.showLoading();
-        mLoginUsecase.execute();
+        mLoginSubscription = mLoginUsecase.execute().subscribe(
+                // On Next
+                (response) ->  { onNext(response); },
+                // On Error
+                (throwable) -> { onError(throwable); },
+                // On Complete
+                () -> { onComplete(); }
+        );
     }
 
-    @Subscribe
-    public void onAttempedLogin(LoginResponse response) {
-        mLoginView.hideLoading();
-        if(response.isSuccessful()) {
-            mLoginView.loginOK(mRestDataSource);
+    private void onNext(Wrapper<String> response) {
+        if(response.isSuccessfully()){
+            mLoginView.loginOK(mRepository);
         }else{
             mLoginView.showLoginError();
         }
     }
 
-    @Subscribe
-    public void onError(ErrorResponse response) {
+    private void onError(Throwable e) {
         mLoginView.hideLoading();
         mLoginView.showConexionError();
+        //TODO: Quitar para saltar instruccion para dejar de saltar login
+        mLoginView.loginOK(mRepository);
+    }
+
+    private void onComplete() {
+        mLoginView.hideLoading();
     }
 }

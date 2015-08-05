@@ -1,9 +1,9 @@
 package com.iecisa.taxisaccesscontrol.mvp.views;
 
-import com.iecisa.model.entities.Vehicle;
-import com.iecisa.model.entities.VehicleDetails;
 
-import java.util.ArrayList;
+import com.iecisa.taxisaccesscontrol.model.entities.Vehicle;
+
+import java.util.List;
 
 /**
  * @author darevalo
@@ -16,10 +16,8 @@ public interface BlacklistView extends MVPView {
 
     public void showConexionError();
 
-    public void showNewList(ArrayList<Vehicle> list);
+    public void showNewList(List<Vehicle> vehicles);
 
     public void showError();
-
-    public void showVehicleDetails(VehicleDetails vehicleDetails);
 
 }
